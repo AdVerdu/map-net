@@ -1,0 +1,19 @@
+task:
+  n1:
+    component: reader
+    predecessor: void
+    config:
+      size: 10
+      tag: source_A
+  n2:
+    component: splitter
+    predecessor: n1
+    config:
+      transformer: # DSL
+        - div_by_two
+      tag: left
+  n3:
+    component: writer
+    predecessor: n2
+    config:
+      tag: whatever
