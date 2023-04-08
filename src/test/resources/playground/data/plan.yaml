@@ -1,0 +1,23 @@
+id: 123
+name: plastics_dataset
+env: dev
+version: "0.1"
+task:
+  node1:
+    type: input
+    from: void
+    config:
+      size: 10
+      tag: source_A
+  node2:
+    type: splitter
+    from: node1
+    config:
+      transformer: # DSL
+        - div_by_two
+      tag: left
+  node3:
+    type: output
+    from: node2
+    config:
+      tag: whatever
