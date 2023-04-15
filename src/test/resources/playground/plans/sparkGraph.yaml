@@ -5,7 +5,6 @@ version: "0.1"
 task:
   node1:
     type: input
-    from: void
     config:
       basePath: "src/test/resources/playground/data/families"
       filters:
@@ -22,7 +21,6 @@ task:
       tag: source_plastics
   node3:
     type: input
-    from: void
     config:
       basePath: "src/test/resources/playground/data/materials"
       filters:

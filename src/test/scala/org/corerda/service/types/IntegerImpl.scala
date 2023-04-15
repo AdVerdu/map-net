@@ -15,7 +15,7 @@ object IntegerImpl {
     def read: myType = (1 to size).toList
   }
 
-  case class SplitterCmp(transformer: List[String], tag: String) extends Transformer[myType] {
+  case class FxCmp(transformer: List[String], tag: String) extends Transformer[myType] {
     val lookup: List[myType => myType] =
       transformer.map {
         case "div_by_two" => (elem: myType) => elem.map(_ / 2)
@@ -53,10 +53,10 @@ object IntegerImpl {
         for {
           reader <- taskCursor.get[ReaderCmp]("config")
         } yield Node(Zero, reader)
-      case Right("splitter") =>
+      case Right("operations") =>
         for {
           from <- taskCursor.get[String]("from")
-          splitter <- taskCursor.get[SplitterCmp]("config")
+          splitter <- taskCursor.get[FxCmp]("config")
         } yield Node(One(from), splitter)
       case Right("binder") =>
         for {

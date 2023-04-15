@@ -1,5 +1,7 @@
 package org.corerda
 
+import io.circe.Decoder
+import org.corerda.entities.Node
 import org.corerda.rules.core.Job._
 import org.corerda.rules.core.Mapper._
 import org.corerda.rules.core.TreeOps._
@@ -10,7 +12,7 @@ object UnSafeRunner extends App {
   type set = IntegerImpl.myType
 
   val planCfg = FileProvider.fromPath("src/test/resources/playground/plans/intGraph.yaml")
-  implicit val decoder = IntegerImpl.taskDecoder
+  implicit val decoder: Decoder[Node[set]] = IntegerImpl.taskDecoder
   val graph = fromString[set](planCfg)
   val treeGraph = toTree(graph)
 

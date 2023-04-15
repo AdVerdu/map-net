@@ -8,16 +8,9 @@ tasks:
     config:
       size: 11
       tag: source_A
-  node2:
-    type: operations
-    from: node1
-    config:
-      transformer: # DSL
-        - div_by_two
-      tag: left
   node3:
     type: output
-    from: node2
+    from: node1
     config:
       tag: sink_A
   node4:
@@ -46,35 +39,7 @@ tasks:
     config:
       tag: enqueue
   node8:
-    type: operations
+    type: output
     from: node7
     config:
-      transformer:
-        - "if_div:2"
-      tag: left
-  node9:
-    type: output
-    from: node8
-    config:
       tag: sink_B
-  node10:
-    type: binder
-    left: node5
-    right: node6
-    config:
-      tag: merge
-  node11:
-    type: output
-    from: node10
-    config:
-      tag: sink_C
-  node12:
-    type: output
-    from: node5
-    config:
-      tag: sink_12
-  node13:
-    type: output
-    from: node6
-    config:
-      tag: sink_13
