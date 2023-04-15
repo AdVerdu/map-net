@@ -1,3 +1,4 @@
+# TODO - setup maven central account before using this action
 name: Deploy
 
 on:
