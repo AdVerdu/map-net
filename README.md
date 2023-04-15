@@ -1,6 +1,6 @@
 # MapNet
 
-This code follows the path of Tao for the non-action. This code that does nothing, thus nothing couples with it (However, it's really able to do things).
+This code follows the path of Tao for the non-action. This code does nothing, thus nothing couples with it (However, it's really able to do things).
 
 This lib offers an extensible API for dynamic chained computations defined as a YAML string graph.
 
