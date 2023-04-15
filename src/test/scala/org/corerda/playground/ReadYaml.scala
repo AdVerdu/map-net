@@ -10,7 +10,7 @@ object ReadYaml extends App {
   case class Task(`type`: String, from: String, config: Config)
   case class Config(size: Option[Int], tag: Option[String], transformer: Option[List[String]])
 
-  val source = scala.io.Source.fromFile("src/test/resources/playground/data/plan.yaml")
+  val source = scala.io.Source.fromFile("src/test/resources/playground/plans/intGraph.yaml")
   val yaml: Either[ParsingFailure, Json] = parser.parse(source.mkString)
   val plan: Either[io.circe.Error, Plan] = yaml.flatMap(_.as[Plan])
 

@@ -16,11 +16,9 @@ object IntExample extends App {
   type Job = Tree[Cmpnt]
 
   // Entities to be generic with params enforced by framework
-  case class Graph(id: Int, name: String, env: String, version: String, task: Map[String, Tasky])
+  case class Graph(id: Int, name: String, env: String, version: String, tasks: Map[String, Tasky])
   case class Tasky(predecessor: Cardinal[String], config: Cmpnt)
 
-  // Service HOFs defined/enforced by framework
-  // Service implementation are described by user
   sealed trait Cmpnt
   case class ReaderCmp(size: Int, tag: String) extends Cmpnt {
     def read: myType = (1 to size).toList
@@ -82,11 +80,11 @@ object IntExample extends App {
   val source = scala.io.Source.fromFile("src/test/resources/playground/plans/intGraph.yaml")
   val yaml: Either[ParsingFailure, Json] = parser.parse(source.mkString)
   val plan: Either[io.circe.Error, Graph] = yaml.flatMap(_.as[Graph])
-  val tasks: Graph = plan.toTry match {
+  val planEval: Graph = plan.toTry match {
     case Success(value) => value
     case Failure(e) => throw new Exception(e)
   }
-  val graph = tasks.task
+  val graph = planEval.tasks
   source.close()
 
   // Rules are defined by framework
@@ -113,7 +111,7 @@ object IntExample extends App {
     def buildTree(prnt: Tasky): Tree[Cmpnt] = {
       prnt.predecessor match {
         case Zero => Tree.leaf(bToC(prnt))
-        case One(value) => Tree.stick(bToC(prnt), buildTree(graph(value)))
+        case One(value) => Tree.stem(bToC(prnt), buildTree(graph(value)))
         case Two(left, right) =>
           Tree.branch(bToC(prnt), buildTree(graph(left)), buildTree(graph(right)))
       }
@@ -128,8 +126,8 @@ object IntExample extends App {
   // TODO - MapTree (from components to Tasks)
   def foldTree(job: Job): myType = job match {
     case Leaf(reader: ReaderCmp) => reader.read
-    case Stick(task: SplitterCmp, next) => task.f(foldTree(next))
-    case Stick(writer: WriterCmp, next) =>
+    case Stem(task: SplitterCmp, next) => task.f(foldTree(next))
+    case Stem(writer: WriterCmp, next) =>
       val data = foldTree(next)
       writer.write(data)
       data

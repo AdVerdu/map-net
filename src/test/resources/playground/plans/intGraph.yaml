@@ -2,10 +2,9 @@ id: 123
 name: plastics_dataset
 env: dev
 version: "0.1"
-task:
+tasks:
   node1:
     type: input
-    from: void
     config:
       size: 11
       tag: source_A
@@ -23,7 +22,6 @@ task:
       tag: sink_A
   node4:
     type: input
-    from: void
     config:
       size: 50
       tag: source_B

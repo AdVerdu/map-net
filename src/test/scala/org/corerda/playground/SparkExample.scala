@@ -110,7 +110,7 @@ object SparkExample extends App {
     def buildTree(prnt: Tasky): Tree[Cmpnt] = {
       prnt.predecessor match {
         case Zero => Tree.leaf(bToC(prnt))
-        case One(value) => Tree.stick(bToC(prnt), buildTree(graph(value)))
+        case One(value) => Tree.stem(bToC(prnt), buildTree(graph(value)))
         case Two(left, right) =>
           Tree.branch(bToC(prnt), buildTree(graph(left)), buildTree(graph(right)))
       }
@@ -125,8 +125,8 @@ object SparkExample extends App {
   // TODO - MapTree (from components to Tasks)
   def foldTree(job: Job): myType = job match {
     case Leaf(reader: ReaderCmp) => reader.read
-    case Stick(task: TransformerCmp, next) => task.f(foldTree(next))
-    case Stick(writer: WriterCmp, next) =>
+    case Stem(task: TransformerCmp, next) => task.f(foldTree(next))
+    case Stem(writer: WriterCmp, next) =>
       val data = foldTree(next)
       writer.write(data)
       data
