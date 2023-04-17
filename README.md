@@ -44,5 +44,11 @@ This code follows the path of **Lao Tse** for the **non-action**. Allowing you t
 ## Examples
 > [Spark Implementation](https://github.com/AdVerdu/tao-spark)
 
-### dummy graph
+### Visaulization Example
+Males with active driving licenses
+
+> A YAML Plan as a graph of tasks which yields the function composititon below
+
 ![Males with active driving licenses](https://github.com/AdVerdu/map-net/blob/readme-assets/images/graph_dummy_example.png)
+
+> *result* = writter( inner( filter( *col_A* ), trans( *col_B* ) ) )
