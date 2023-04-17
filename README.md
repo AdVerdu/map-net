@@ -22,14 +22,14 @@ version: ...
 tasks:
   <key_1>: # uuid
     type: <component> # User defined task name
-    config: # Map[K, V]
-      <key>: <value>
+    config: # configuration for the component
+      <attribute>: <value>
       ...
   <key_n>:
     type: <component>
     from: <Other_key> # pointer to previous task
     config:
-      <key>: <value>
+      <attribute>: <value>
       ...
 
 ```
