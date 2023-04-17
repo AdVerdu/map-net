@@ -13,6 +13,27 @@ This lib offers an extensible API for **Dynamic Chained Computations** defined a
 The User Defined DSL should be placed in the **service layer** along with a YAML decoder for the type needed.
 This way the features are decoupled from the definition improving maintainability and re-usability (features in the code / business logic in the YAML).
 
+### Template
+``` yaml
+id: ...
+name: ...
+env: ...
+version: ...
+tasks:
+  <key_1>: # uuid
+    type: <component> # User defined task name
+    config: # Map[K, V]
+      <key>: <value>
+      ...
+  <key_n>:
+    type: <component>
+    from: <Other_key> # pointer to previous task
+    config:
+      <key>: <value>
+      ...
+
+```
+
 ## Motivation
 > When the US perimeter is changing faster than you can sprint.
 
