@@ -4,6 +4,7 @@ import org.corerda.entities._
 import org.scalatest.funspec.AnyFunSpec
 
 
+// @ Deprecated
 class JobTest extends AnyFunSpec {
   import org.corerda.service.types.IntegerImpl._
 
@@ -23,7 +24,7 @@ class JobTest extends AnyFunSpec {
         val expected =
           List(10, 20, 30, 40, 50, 60, 70, 24, 27, 30, 33, 36, 39, 42, 45, 48)
 
-        assert(foldTree(myJob) == expected)
+        assert(eval(myJob) == expected)
       }
     }
   }
