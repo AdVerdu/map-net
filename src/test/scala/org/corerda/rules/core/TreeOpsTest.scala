@@ -19,18 +19,18 @@ class TreeOpsTest extends AnyFunSpec {
   // test type = List[Int]
   import org.corerda.rules.core.TreeOps._
   describe("TreeOps Test") {
-    describe("given a plan (graph as Map of nodes), toTree[T] ") {
-      it("Should split and parse into a List[Job[T]]") {
-        val expected = List(
-          Tree.stem(WriterCmp("sink_B"),
-            Tree.branch(BinderCmp("merge"),
-              Tree.stem(FxCmp(List("if_div:3"), "left"),
-                Tree.leaf(ReaderCmp(50, "source_B"))),
-              Tree.stem(FxCmp(List("if_div:7"), "left"),
-                Tree.leaf(ReaderCmp(50, "source_B"))))),
-          Tree.stem(WriterCmp("sink_A"),
-            Tree.leaf(ReaderCmp(10, "source_A"))))
-        assert(toTree(myPlan) == expected)
+    // TODO - remove comment
+    // toTree[T] Test @ deprecated
+    //    -> behaviour change from Tag-less Initial to TF, removed Job eval
+      describe("given a plan (graph as Map of nodes), runAST[T] ") {
+        it("Should return the root results of the AST evaluation") {
+          val expected = List(
+            ExprTree(
+              List(10, 20, 30, 40, 50, 60, 70, 24, 27, 30, 33, 36, 39, 42, 45, 48)),
+            ExprTree(
+              List(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)))
+          assert(runAST(myPlan) == expected)
+        }
       }
     }
   }
