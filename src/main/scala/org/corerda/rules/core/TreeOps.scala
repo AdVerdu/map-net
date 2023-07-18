@@ -1,7 +1,6 @@
 package org.corerda.rules.core
 
 import org.corerda.entities._
-import org.corerda.rules.core.Job.Job
 
 import scala.language.implicitConversions
 
@@ -12,30 +11,43 @@ object TreeOps {
     def unary_! : A => Boolean = a => !self(a)
   }
 
-  def toTree[T](graph: Map[String, Node[T]]): List[Job[T]] = {
-    val bToC: Node[T] => Task[T] = _.config
-
+  // FIXME - rename to something like Run
+  // TODO - return a list of validations/errors per ExprTree executed
+  def runAST[T](graph: Map[String, Node[T]]): List[ExprTree[T]] = {
     // get cardinal
-    val pointer = (e: Node[T]) => e.predecessor match {
+    val pointed = (e: Node[T]) => e.predecessor match {
       case Zero => Nil
       case One(value) => List(value)
       case Two(left, right) => List(left, right)
     }
 
-    val nonStarters: Set[String] = graph.values.flatMap(pointer).toSet
+    // @ comment: get a list of all the distinct nodes that are being pointed at
+    val nonStarters: Set[String] = graph.values.flatMap(pointed).toSet
 
-    implicit def Predicate_Is_PredicateW[A](p: A => Boolean): PredicateW[A] = new PredicateW(p)
+    implicit def predicateWrapper[A](p: A => Boolean): PredicateW[A] = new PredicateW(p)
+    // @ comment: get the root elements of the trees
     val starters = graph.view.filterKeys(!nonStarters)
 
-    def buildTree(parent: Node[T]): Job[T] = {
-      parent.predecessor match {
-        case Zero => Tree.leaf(bToC(parent))
-        case One(value) => Tree.stem(bToC(parent), buildTree(graph(value)))
-        case Two(left, right) =>
-          Tree.branch(bToC(parent), buildTree(graph(left)), buildTree(graph(right)))
+    // TODO
+    //  - tailrec version (?)
+    //  - expression problem
+    //      - TF version (tree of expressions not objects)
+    //      - Can we remove altogether the Tree skipping straight to the final composed function (?)
+    def mapEval(parent: Node[T]): ExprTree[T] = {
+      parent match {
+        case Node(Zero, ops:Reader[T]) =>
+          ExprTree.leaf(ops)
+        case Node(One(child), ops: Transformer[T]) =>
+          ExprTree.stem(ops)(mapEval(graph(child)))
+        case Node(Two(left, right), ops: Binder[T]) =>
+          ExprTree.branch(ops)(mapEval(graph(left)), mapEval(graph(right)))
+        // FIXME - warn /!\ this triggers actions (it's that okay?)
+        case Node(One(child), ops: Writer[T])=>
+          ExprTree.root(ops)(mapEval(graph(child)))
       }
     }
 
-    starters.values.map(buildTree).toList
+    // @ comment: run the function composition of the Expression Trees from the list of roots
+    starters.values.map(mapEval).toList
   }
 }

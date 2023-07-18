@@ -1,5 +1,7 @@
 package org.corerda.entities
 
+
+// @ Deprecated
 trait Tree[+A]
 object Tree {
   def leaf[A](value: A): Tree[A] = Leaf(value)
