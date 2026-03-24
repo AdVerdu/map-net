@@ -1,21 +1,23 @@
 package org.corerda.rules.core
 
+import cats.syntax.all._
 import io.circe.generic.auto._
 import io.circe.yaml._
-import io.circe.{Decoder, Json, ParsingFailure}
-
-import scala.util.{Failure, Success}
+import io.circe.{Decoder, Json}
 import org.corerda.entities._
+
+import scala.util.Try
 
 // YAML Mapper
 object Mapper {
-  def fromString[T](payload: String)(implicit taskDecoder: Decoder[Node[T]]): Map[String, Node[T]] = {
-    val yaml: Either[ParsingFailure, Json] = parser.parse(payload)
-    val plan: Plan[T] =
-      yaml.flatMap(_.as[Plan[T]]).toTry match {
-      case Success(value) => value
-      case Failure(e) => throw new Exception(e)
-    }
-    plan.tasks
+
+  /** Decodes a YAML string into a graph of nodes.
+    * Returns an Either[Throwable, Map[String, Node[T]]] for functional error handling.
+    */
+  def fromString[T](payload: String)(implicit taskDecoder: Decoder[Node[T]]): Either[Throwable, Map[String, Node[T]]] = {
+    for {
+      json <- parser.parse(payload).leftMap(pf => pf: Throwable)
+      plan <- json.as[Plan[T]].leftMap(e => e: Throwable)
+    } yield plan.tasks
   }
 }
