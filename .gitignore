@@ -1,5 +1,5 @@
 # sbt
-project/
+project/target/
 target/
 
 # intellij idea
@@ -10,6 +10,13 @@ target/
 .idea
 .bsp
 out
+
+# scala-cli / metals / bloop
+.scala-build/
+.metals/
+.bloop/
+.ammonite/
+cs
 
 # general
 *.class
