@@ -19,19 +19,21 @@ class TreeOpsTest extends AnyFunSpec {
   // test type = List[Int]
   import org.corerda.rules.core.TreeOps._
   describe("TreeOps Test") {
-    // TODO - remove comment
-    // toTree[T] Test @ deprecated
-    //    -> behaviour change from Tag-less Initial to TF, removed Job eval
       describe("given a plan (graph as Map of nodes), runAST[T] ") {
         it("Should return the root results of the AST evaluation") {
-          val expected = List(
-            ExprTree(
-              List(10, 20, 30, 40, 50, 60, 70, 24, 27, 30, 33, 36, 39, 42, 45, 48)),
-            ExprTree(
-              List(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)))
-          assert(runAST(myPlan) == expected)
+          val resultsOrError = runAST(myPlan)
+          assert(resultsOrError.isRight)
+          val results = resultsOrError.getOrElse(Nil)
+
+          val expectedValues = Set(
+            List(10, 20, 30, 40, 50, 60, 70, 24, 27, 30, 33, 36, 39, 42, 45, 48),
+            List(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+          )
+
+          val actualValues = results.map(_.eval.value).toSet
+
+          assert(actualValues == expectedValues)
         }
       }
     }
-  }
 }

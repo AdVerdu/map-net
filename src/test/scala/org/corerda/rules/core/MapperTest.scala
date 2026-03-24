@@ -9,9 +9,9 @@ class MapperTest extends AnyFunSpec {
   val myStrPlan = FileProvider.fromPath("src/test/resources/testPlans/mapper.yaml")
 
   import org.corerda.rules.core.Mapper._
-  describe("Job[Int] Test") {
-    describe("given a job, foldTree ") {
-      it("Should resolve the function composition defined in Tree[Task[Int]]") {
+  describe("Mapper Test") {
+    describe("given a payload, fromString") {
+      it("Should resolve the graph of nodes defined in YAML") {
         import org.corerda.service.types.IntegerImpl
         import org.corerda.service.types.IntegerImpl._
 
@@ -25,7 +25,7 @@ class MapperTest extends AnyFunSpec {
           "node7" -> Node(Two("node5", "node6"), BinderCmp("enqueue")),
           "node8" -> Node(One("node7"), WriterCmp("sink_B")))
 
-        assert(fromString[IntegerImpl.myType](myStrPlan) == expected)
+        assert(fromString[IntegerImpl.myType](myStrPlan) == Right(expected))
       }
     }
   }
