@@ -1,8 +1,9 @@
 package org.corerda.rules.core
 
+import cats.Eval
+import cats.syntax.all._
 import org.corerda.entities._
-
-import scala.language.implicitConversions
+import scala.collection.mutable
 
 object TreeOps {
   class PredicateW[A](self: A => Boolean) {
@@ -11,43 +12,54 @@ object TreeOps {
     def unary_! : A => Boolean = a => !self(a)
   }
 
-  // FIXME - rename to something like Run
-  // TODO - return a list of validations/errors per ExprTree executed
-  def runAST[T](graph: Map[String, Node[T]]): List[ExprTree[T]] = {
-    // get cardinal
+  /** Executes the graph of nodes and returns the roots of the expression trees.
+   * Uses cats.Eval for stack-safety and memoization to handle DAG structures.
+   * Returns an Either[Throwable, List[ExprTree[T]]] for pure error handling.
+   */
+  def runAST[T](graph: Map[String, Node[T]]): Either[Throwable, List[ExprTree[T]]] = {
+    val memo = mutable.Map.empty[String, Either[Throwable, Eval[T]]]
+
+    def evalNode(id: String): Either[Throwable, Eval[T]] = {
+      memo.get(id) match {
+        case Some(result) => result
+        case None =>
+          val result = graph.get(id) match {
+            case None => Left(new IllegalArgumentException(s"Node $id not found in graph"))
+            case Some(node) =>
+              node match {
+                case Node(Zero, ops: Reader[T]) =>
+                  Right(Eval.later(ops.read))
+                case Node(One(childId), ops: Transformer[T]) =>
+                  evalNode(childId).map(_.map(ops.f))
+                case Node(Two(leftId, rightId), ops: Binder[T]) =>
+                  for {
+                    lEval <- evalNode(leftId)
+                    rEval <- evalNode(rightId)
+                  } yield for {
+                    l <- lEval
+                    r <- rEval
+                  } yield ops.bind(l, r)
+                case Node(One(childId), ops: Writer[T]) =>
+                  evalNode(childId).map(_.map(ops.write))
+                case _ =>
+                  Left(new IllegalArgumentException(s"Unsupported node configuration for node $id"))
+              }
+          }
+          val memoizedResult = result.map(_.memoize)
+          memo.put(id, memoizedResult)
+          memoizedResult
+      }
+    }
+
     val pointed = (e: Node[T]) => e.predecessor match {
       case Zero => Nil
       case One(value) => List(value)
       case Two(left, right) => List(left, right)
     }
 
-    // @ comment: get a list of all the distinct nodes that are being pointed at
     val nonStarters: Set[String] = graph.values.flatMap(pointed).toSet
+    val starters = graph.keys.filterNot(nonStarters).toList
 
-    implicit def predicateWrapper[A](p: A => Boolean): PredicateW[A] = new PredicateW(p)
-    // @ comment: get the root elements of the trees
-    val starters = graph.view.filterKeys(!nonStarters)
-
-    // TODO
-    //  - tailrec version (?)
-    //  - expression problem
-    //      - TF version (tree of expressions not objects)
-    //      - Can we remove altogether the Tree skipping straight to the final composed function (?)
-    def mapEval(parent: Node[T]): ExprTree[T] = {
-      parent match {
-        case Node(Zero, ops:Reader[T]) =>
-          ExprTree.leaf(ops)
-        case Node(One(child), ops: Transformer[T]) =>
-          ExprTree.stem(ops)(mapEval(graph(child)))
-        case Node(Two(left, right), ops: Binder[T]) =>
-          ExprTree.branch(ops)(mapEval(graph(left)), mapEval(graph(right)))
-        // FIXME - warn /!\ this triggers actions (it's that okay?)
-        case Node(One(child), ops: Writer[T])=>
-          ExprTree.root(ops)(mapEval(graph(child)))
-      }
-    }
-
-    // @ comment: run the function composition of the Expression Trees from the list of roots
-    starters.values.map(mapEval).toList
+    starters.traverse(id => evalNode(id).map(ExprTree(_)))
   }
 }

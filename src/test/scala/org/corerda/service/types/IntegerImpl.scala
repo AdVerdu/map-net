@@ -4,13 +4,9 @@ import io.circe.generic.auto._
 import io.circe.Decoder
 import org.corerda.entities._
 
-// TODO Service HOFs defined/enforced by framework (IO/f(_: *))
 object IntegerImpl {
-  // def notDefined: IllegalArgumentException = new IllegalArgumentException(" this isn't allowed, still I'll have to improve my code in order to make it impossible to happen")
-  // Types TBD by user
   type myType = List[Int]
 
-  // Service implementation are described by user
   case class ReaderCmp(size: Int, tag: String) extends Reader[myType] {
     def read: myType = (1 to size).toList
   }
@@ -24,6 +20,7 @@ object IntegerImpl {
 
     def f(data: myType): myType = lookup.foldLeft(data)((ca, f) => f(ca))
   }
+
   case class BinderCmp(tag: String) extends Binder[myType] {
     val operation: (myType, myType) => myType =
       tag match {
@@ -37,6 +34,7 @@ object IntegerImpl {
       }
     def bind(left: myType, right: myType): myType = operation(left, right)
   }
+
   case class WriterCmp(tag: String) extends Writer[myType] {
     def write(data: myType): myType = {
       println(s"the result in $tag is: $data")
@@ -44,30 +42,22 @@ object IntegerImpl {
     }
   }
 
-
-  // Service Decoder mapped by user (can be automated with reflection/PM of sorts?)
-  // Decoder for Task
   implicit val taskDecoder: Decoder[Node[myType]] = taskCursor =>
-    taskCursor.get[String]("type") match {
-      case Right("input") =>
-        for {
-          reader <- taskCursor.get[ReaderCmp]("config")
-        } yield Node(Zero, reader)
-      case Right("operations") =>
-        for {
-          from <- taskCursor.get[String]("from")
-          splitter <- taskCursor.get[FxCmp]("config")
-        } yield Node(One(from), splitter)
-      case Right("binder") =>
-        for {
-          left <- taskCursor.get[String]("left")
-          right <- taskCursor.get[String]("right")
-          binder <- taskCursor.get[BinderCmp]("config")
-        } yield Node(Two(left, right), binder)
-      case Right("output") =>
-        for {
-          from <- taskCursor.get[String]("from")
-          writer <- taskCursor.get[WriterCmp]("config")
-        } yield Node(One(from), writer)
+    taskCursor.get[String]("type").flatMap {
+      case "input"      => taskCursor.get[ReaderCmp]("config").map(Node(Zero, _))
+      case "operations" => for {
+                             from <- taskCursor.get[String]("from")
+                             fx   <- taskCursor.get[FxCmp]("config")
+                           } yield Node(One(from), fx)
+      case "binder"     => for {
+                             l      <- taskCursor.get[String]("left")
+                             r      <- taskCursor.get[String]("right")
+                             binder <- taskCursor.get[BinderCmp]("config")
+                           } yield Node(Two(l, r), binder)
+      case "output"     => for {
+                             from <- taskCursor.get[String]("from")
+                             writer <- taskCursor.get[WriterCmp]("config")
+                           } yield Node(One(from), writer)
+      case other        => Left(io.circe.DecodingFailure(s"Unknown task type: $other", taskCursor.history))
     }
 }
